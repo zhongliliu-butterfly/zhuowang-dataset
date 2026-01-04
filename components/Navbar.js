@@ -17,7 +17,8 @@ import {
   Menu,
   ListItemIcon,
   ListItemText,
-  Divider
+  Divider,
+  Button
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import ModelSelect from './ModelSelect';
@@ -25,9 +26,11 @@ import LanguageSwitcher from './LanguageSwitcher';
 import UpdateChecker from './UpdateChecker';
 import TaskIcon from './TaskIcon';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { useAtom } from 'jotai';
+import { loginStateAtom } from '@/lib/store';
 
 // 图标
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
@@ -45,6 +48,9 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ChatIcon from '@mui/icons-material/Chat';
 import ImageIcon from '@mui/icons-material/Image';
 import SourceIcon from '@mui/icons-material/Source';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LogoutIcon from '@mui/icons-material/Logout';
+import LoginIcon from '@mui/icons-material/Login';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { useSetAtom } from 'jotai/index';
@@ -58,6 +64,9 @@ export default function Navbar({ projects = [], currentProject }) {
   const { resolvedTheme, setTheme } = useTheme();
   const setConfigList = useSetAtom(modelConfigListAtom);
   const setSelectedModelInfo = useSetAtom(selectedModelInfoAtom);
+  const [loginState, setLoginState] = useAtom(loginStateAtom);
+  const router = useRouter();
+  
   // 只在项目详情页显示模块选项卡
   const isProjectDetail = pathname.includes('/projects/') && pathname.split('/').length > 3;
   // 更多菜单状态
@@ -71,6 +80,10 @@ export default function Navbar({ projects = [], currentProject }) {
   // 数据源菜单状态
   const [sourceMenuAnchor, setSourceMenuAnchor] = useState(null);
   const isSourceMenuOpen = Boolean(sourceMenuAnchor);
+
+  // 用户菜单状态
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
+  const isUserMenuOpen = Boolean(userMenuAnchor);
 
   // 处理更多菜单打开
   const handleMoreMenuOpen = event => {
@@ -120,6 +133,32 @@ export default function Navbar({ projects = [], currentProject }) {
   // 处理数据源菜单区域的鼠标离开
   const handleSourceMenuMouseLeave = () => {
     setSourceMenuAnchor(null);
+  };
+
+  // 处理用户菜单打开
+  const handleUserMenuOpen = event => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  // 关闭用户菜单
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  // 处理登录
+  const handleLogin = () => {
+    router.push('/login');
+    handleUserMenuClose();
+  };
+
+  // 处理登出
+  const handleLogout = () => {
+    setLoginState({
+      isLoggedIn: false,
+      username: '',
+    });
+    toast.success('已成功登出');
+    handleUserMenuClose();
   };
 
   const handleProjectChange = event => {
@@ -505,6 +544,44 @@ export default function Navbar({ projects = [], currentProject }) {
           </MenuItem> */}
         </Menu>
 
+        {/* 用户菜单 */}
+        <Menu
+          anchorEl={userMenuAnchor}
+          open={isUserMenuOpen}
+          onClose={handleUserMenuClose}
+          PaperProps={{
+            elevation: 2,
+            sx: { mt: 1.5, borderRadius: 2, minWidth: 180 },
+          }}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          MenuListProps={{
+            dense: true,
+          }}
+        >
+          {loginState.isLoggedIn ? (
+            <>
+              <MenuItem disabled>
+                <ListItemText primary={`欢迎, ${loginState.username}`} />
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <LogoutIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="登出" />
+              </MenuItem>
+            </>
+          ) : (
+            <MenuItem onClick={handleLogin}>
+              <ListItemIcon>
+                <LoginIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="登录" />
+            </MenuItem>
+          )}
+        </Menu>
+
         {/* 右侧操作区 - 使用Flex布局 */}
         <Box sx={{ display: 'flex', flexGrow: 0, alignItems: 'center', gap: 1.5 }}>
           {/* 模型选择 */}
@@ -539,49 +616,22 @@ export default function Navbar({ projects = [], currentProject }) {
             </IconButton>
           </Tooltip>
 
-          {/* 文档链接 */}
-          {/* <Tooltip title={t('documentation')}>
-            <IconButton
-              href={
-                i18n.language === 'zh-CN' ? 'https://docs.easy-dataset.com/' : 'https://docs.easy-dataset.com/ed/en'
+          {/* 用户头像/登录按钮 */}
+          <IconButton
+            onClick={handleUserMenuOpen}
+            size="small"
+            sx={{
+              bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)',
+              color: theme.palette.mode === 'dark' ? 'inherit' : 'white',
+              p: 1,
+              borderRadius: 1.5,
+              '&:hover': {
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.25)'
               }
-              target="_blank"
-              rel="noopener noreferrer"
-              size="small"
-              sx={{
-                bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)',
-                color: theme.palette.mode === 'dark' ? 'inherit' : 'white',
-                p: 1,
-                borderRadius: 1.5,
-                '&:hover': {
-                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.25)'
-                },
-                mr: 1,
-                marginRight: 0
-              }}
-            >
-              <HelpOutlineIcon fontSize="small" />
-            </IconButton>
-          </Tooltip> */}
-
-          {/* GitHub链接 */}
-          {/* <Tooltip title={t('common.visitGitHub')}>
-            <IconButton
-              onClick={() => window.open('https://github.com/ConardLi/easy-dataset', '_blank')}
-              size="small"
-              sx={{
-                bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)',
-                color: theme.palette.mode === 'dark' ? 'inherit' : 'white',
-                p: 1,
-                borderRadius: 1.5,
-                '&:hover': {
-                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.25)'
-                }
-              }}
-            >
-              <GitHubIcon fontSize="small" />
-            </IconButton>
-          </Tooltip> */}
+            }}
+          >
+            <AccountCircleIcon fontSize="small" />
+          </IconButton>
 
           {/* 更新检查器 */}
           <UpdateChecker />

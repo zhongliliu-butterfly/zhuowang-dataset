@@ -8,6 +8,7 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import StorageIcon from '@mui/icons-material/Storage';
 import MemoryIcon from '@mui/icons-material/Memory';
+import { useTranslation } from 'react-i18next';
 
 // 默认模型列表
 const mockModels = [
@@ -18,6 +19,8 @@ const mockModels = [
 ];
 
 export default function StatsCard({ projects }) {
+  const { t } = useTranslation();
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 

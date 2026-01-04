@@ -11,6 +11,9 @@ import CreateProjectDialog from '@/components/home/CreateProjectDialog';
 import MigrationDialog from '@/components/home/MigrationDialog';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useAtomValue, useAtom } from 'jotai';
+import { loginStateAtom } from '@/lib/store';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -20,8 +23,26 @@ export default function Home() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [unmigratedProjects, setUnmigratedProjects] = useState([]);
   const [migrationDialogOpen, setMigrationDialogOpen] = useState(false);
+  const [loginState] = useAtom(loginStateAtom);
+  const router = useRouter();
+  const [isLoginStateLoaded, setIsLoginStateLoaded] = useState(false);
 
   useEffect(() => {
+    // 检查登录状态是否加载完成
+    if (!isLoginStateLoaded) {
+      setIsLoginStateLoaded(true);
+      return;
+    }
+
+    if (loginState.isLoggedIn === undefined) {
+      return; // 等待登录状态加载完成
+    }
+
+    if (!loginState.isLoggedIn) {
+      router.replace('/login'); // 使用 replace 避免记录跳转历史
+      return;
+    }
+
     async function fetchProjects() {
       try {
         setLoading(true);
@@ -67,9 +88,29 @@ export default function Home() {
     }
 
     fetchProjects();
-  }, []);
+  }, [isLoginStateLoaded, loginState.isLoggedIn, router]);
 
   const theme = useTheme();
+
+  if (!isLoginStateLoaded || loginState.isLoggedIn === undefined) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: theme.palette.background.default
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!loginState.isLoggedIn) {
+    return null; // 确保未登录时不渲染任何内容
+  }
 
   return (
     <main style={{ overflow: 'hidden', position: 'relative' }}>
@@ -83,7 +124,11 @@ export default function Home() {
           mt: { xs: 6, md: 8 },
           mb: { xs: 4, md: 6 },
           position: 'relative',
-          zIndex: 1
+          overflowY: 'auto',
+          '&::-webkit-scrollbar': {
+            display: 'none' // 隐藏 Webkit 浏览器的滚动条
+          },
+          scrollbarWidth: 'none' // 隐藏 Firefox 浏览器的滚动条
         }}
       >
         {/* <StatsCard projects={projects} /> */}
