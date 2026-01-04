@@ -146,7 +146,7 @@
     ],
     "compression": "maximum",
     "mac": {
-      "icon": "public/imgs/logo.icns",
+      "icon": "public/imgs/zhuowang.svg",
       "category": "public.app-category.developer-tools",
       "target": [
         {
@@ -163,7 +163,7 @@
       ]
     },
     "win": {
-      "icon": "public/imgs/logo.ico",
+      "icon": "public/imgs/zhuowang.svg",
       "target": [
         {
           "target": "nsis",

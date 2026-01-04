@@ -22,7 +22,7 @@ function createWindow(isDev, port) {
       contextIsolation: true,
       preload: path.join(__dirname, '..', 'preload.js')
     },
-    icon: path.join(__dirname, '../../public/imgs/logo.ico')
+    icon: path.join(__dirname, '../../public/imgs/zhuowang.png')
   });
 
   // 设置窗口标题
